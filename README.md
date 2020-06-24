@@ -8,7 +8,7 @@ fvcc.py token sig.py dst
 
 * fvcc.py : main pyton script
 * token : github API token
-* sig.py : dicts including [meta, vuln(code), patch(code)]
+* sig.py : dicts including [name(or meta), vuln(code), patch(code)]
 * dst : where candidate codes are saved
 
 Note that vuln(code), patch(code) are one line string.
