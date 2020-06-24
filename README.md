@@ -11,8 +11,6 @@ fvcc.py token sig.py dst
 * sig.py : dicts including [name(or meta), vuln(code), patch(code)]
 * dst : where candidate codes are saved
 
-Note that vuln(code), patch(code) are one line string.
-
 ## Logic (pseudo)
 ```
 for dict in sig.py
