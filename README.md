@@ -4,11 +4,12 @@ Find Vulnerable Code Clone
 (Simple searching script using github API) 
 
 ## Argv
-fvcc.py sig.py dst
+fvcc.py token sig.py dst
 
-* fvcc.py : main pyton script.
+* fvcc.py : main pyton script
+* token : github API token
 * sig.py : lists including [vuln code, patch code]
-* dst : where candidate codes are saved.
+* dst : where candidate codes are saved
 
 ## Logic (pseudo)
 ```
