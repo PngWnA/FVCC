@@ -1,6 +1,8 @@
 # FVCC
 Find Vulnerable Code Clone
 
+(Simple searching script using github API) 
+
 ## Argv
 fvcc.py sig.py dst
 
