@@ -11,7 +11,7 @@ def ff(meta):
     if not (meta["path"].endswith(".c") or meta["path"].endswith(".cpp")):
         return False
     star = json.loads(requests.get(meta["repository"]["url"], auth=('PngWnA', meta['token'])).text)["stargazers_count"]
-    if star < 25:
+    if star < 50:
         return False
     return meta
 
@@ -56,13 +56,13 @@ def search(code, filetype, language, token):
     return result
 
 # get_content : json[repository] x token -> full code 
-def get_code(meta):
+def get_code(data, token):
     code_endpoint = "https://api.github.com/repos"
-    repository_name = meta["repository"]["full_name"]
-    path = meta["path"]
+    repository_name = data["repository"]["full_name"]
+    path = data["path"]
     payload = "/".join([code_endpoint, repository_name, "contents", path])
 
-    response = requests.get(payload, auth=("PngWnA", meta['token']))
+    response = requests.get(payload, auth=("PngWnA", token))
     try:
         encoded = json.loads(response.text)["content"]
     except:
@@ -72,7 +72,8 @@ def get_code(meta):
     return decoded
 
 # save_codes : meta* x code* -> source_code*
-def save_code(items, codes):
+def save_codes(items, codes):
+   
     for idx in range(len(codes)):
         payload = "".join([items[idx]['repository']['full_name'].replace('/', '->'), str(codes[idx])])
         open(f"{items[idx]['name']}", "w+", encoding="utf=8").write(payload)
@@ -107,13 +108,16 @@ def main(argv):
         possible_list = pool.map(ff, search_list)
         possible_list = list(filter(lambda x: x != False, possible_list))
 
+
+        print (possible_list)
         print(f"[*] Search list reduced to : {len(search_list)} -> {len(possible_list)} ({len(possible_list) * 100 / len(search_list)}%)")
 
-        codes = pool.map(get_code, possible_list)
-        index = 0
+        exit()
 
+        index = 0
         for candidate in possible_list:
-            code = codes[index]
+            index += 1
+            code = get_code(candidate, token)
             print(f"\r[*] Processing #{index}/#{len(possible_list)}", end="")
             try:
                 if code == -1:
@@ -125,7 +129,6 @@ def main(argv):
                 print("")
                 print(f"ERROR OCCURED : {e}")
                 exit()
-            index += 1
     print("")
     print(f"\r[*] Possible list recuded to  #{len(possible_list)} -> #{len(os.listdir(target['name']))} ({len(os.listdir(target['name'])) * 100 /len(possible_list)})")
     return
