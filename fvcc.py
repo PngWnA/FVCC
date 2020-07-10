@@ -7,9 +7,14 @@ from itertools import chain
 
 # ff(filter function) : meta -> {0, 1}
 def ff(meta):
-    positive = [meta["path"].endswith(".c"), meta["path"].endswith(".cpp")]
-    negative = [False]
-    return (True in positive) and not (True in negative)
+    print(". ", end='', flush=True)
+    if not (meta["path"].endswith(".c") or meta["path"].endswith(".cpp")):
+        return False
+    star = json.loads(requests.get(meta["repository"]["url"], auth=('PngWnA', meta['token'])).text)["stargazers_count"]
+    if star < 25:
+        return False
+    return meta
+
 
 # search : target code x meta* x token -> list[json*]
 def search(code, filetype, language, token):
@@ -35,6 +40,7 @@ def search(code, filetype, language, token):
     Should implement multiprocessing later...
     This pool method does not take lambda (since lambda cannot be pickled).
     '''
+
     #pool = multiprocessing.Pool(fragment)
     #result = pool.map(lambda page: requests.get(payload.replace('page=1', f'page={page}'), auth=('PngWnA',token)).text, range(1, fragment + 1))
 
@@ -50,13 +56,13 @@ def search(code, filetype, language, token):
     return result
 
 # get_content : json[repository] x token -> full code 
-def get_code(data, token):
+def get_code(meta):
     code_endpoint = "https://api.github.com/repos"
-    repository_name = data["repository"]["full_name"]
-    path = data["path"]
+    repository_name = meta["repository"]["full_name"]
+    path = meta["path"]
     payload = "/".join([code_endpoint, repository_name, "contents", path])
 
-    response = requests.get(payload, auth=("PngWnA", token))
+    response = requests.get(payload, auth=("PngWnA", meta['token']))
     try:
         encoded = json.loads(response.text)["content"]
     except:
@@ -66,8 +72,7 @@ def get_code(data, token):
     return decoded
 
 # save_codes : meta* x code* -> source_code*
-def save_codes(items, codes):
-   
+def save_code(items, codes):
     for idx in range(len(codes)):
         payload = "".join([items[idx]['repository']['full_name'].replace('/', '->'), str(codes[idx])])
         open(f"{items[idx]['name']}", "w+", encoding="utf=8").write(payload)
@@ -95,14 +100,20 @@ def main(argv):
             os.mkdir(target["name"])
 
         search_list = search(target["vuln"], filetype, language, token)
-        possible_list = list(filter(ff, search_list))
-        
+        for raw in search_list:
+            raw['token'] = token
+
+        pool = multiprocessing.Pool(16)
+        possible_list = pool.map(ff, search_list)
+        possible_list = list(filter(lambda x: x != False, possible_list))
+
         print(f"[*] Search list reduced to : {len(search_list)} -> {len(possible_list)} ({len(possible_list) * 100 / len(search_list)}%)")
 
+        codes = pool.map(get_code, possible_list)
         index = 0
+
         for candidate in possible_list:
-            index += 1
-            code = get_code(candidate, token)
+            code = codes[index]
             print(f"\r[*] Processing #{index}/#{len(possible_list)}", end="")
             try:
                 if code == -1:
@@ -114,6 +125,7 @@ def main(argv):
                 print("")
                 print(f"ERROR OCCURED : {e}")
                 exit()
+            index += 1
     print("")
     print(f"\r[*] Possible list recuded to  #{len(possible_list)} -> #{len(os.listdir(target['name']))} ({len(os.listdir(target['name'])) * 100 /len(possible_list)})")
     return
