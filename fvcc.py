@@ -46,12 +46,15 @@ def search(code, filetype, language, token):
     #result = pool.map(lambda page: requests.get(payload.replace('page=1', f'page={page}'), auth=('PngWnA',token)).text, range(1, fragment + 1))
 
     result = []
-    for i in range(1, fragment+1):
+    for i in range(1, min(fragment+1, 5)):
         result.append(requests.get(payload.replace('page=1', f'page={i}').replace(f'per_page={i}', 'per_page=100'), auth=('PngWnA',token)).text)
         print(f"\r[*] Got {(i/fragment)*100}% <= {payload.replace('page=1', f'page={i}').replace(f'per_page={i}', 'per_page=100')}", end="")
     print("")
-
-    result = list(map(lambda res: json.loads(res)["items"], result))
+    try:
+        result = list(map(lambda res: json.loads(res)["items"], result))
+    except:
+        print (result)
+        exit()
     result = list(chain(*result))
 
     return result
@@ -108,12 +111,9 @@ def main(argv):
         pool = multiprocessing.Pool(16)
         possible_list = pool.map(ff, search_list)
         possible_list = list(filter(lambda x: x != False, possible_list))
+        print("")
 
-
-        print (possible_list)
         print(f"[*] Search list reduced to : {len(search_list)} -> {len(possible_list)} ({len(possible_list) * 100 / len(search_list)}%)")
-
-        exit()
 
         index = 0
         for candidate in possible_list:
@@ -127,7 +127,7 @@ def main(argv):
                     continue
                 open(f"{target['name']}/{candidate['repository']['full_name'].replace('/', '.')}.cpp", "w").write(code)
             except Exception as e:
-                print("")
+                print("\n")
                 print(f"ERROR OCCURED : {e}")
                 exit()
     print("")
