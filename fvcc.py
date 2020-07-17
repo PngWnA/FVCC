@@ -11,7 +11,12 @@ def ff(meta):
     print(". ", end='', flush=True)
     if not (meta["path"].endswith(".c") or meta["path"].endswith(".cpp")):
         return False
-    star = json.loads(requests.get(meta["repository"]["url"], auth=('PngWnA', meta['token'])).text)["stargazers_count"]
+    try:
+        response = requests.get(meta["repository"]["url"], auth=('PngWnA', meta['token'])).text
+        star = json.loads(response)["stargazers_count"]
+    except:
+        print (response)
+        exit()
     if star < 50:
         return False
     return meta

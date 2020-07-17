@@ -1,3 +1,3 @@
 dicts = [
-    {"name":"CVE-2017-7866", "vuln":r"""static int decode_zbuf(AVBPrint *bp, const uint8_t *data,""", "patch":r"""av_bprint_get_buffer(bp, 2, &buf, &buf_size);"""}
+    {"name":"CVE-2018-13785", "vuln":r"""(png_ptr->width * png_ptr->channels * (png_ptr->bit_depth > 8? 2: 1)""", "patch":r"""idat_limit = PNG_UINT_31_MAX;"""}
 ]
